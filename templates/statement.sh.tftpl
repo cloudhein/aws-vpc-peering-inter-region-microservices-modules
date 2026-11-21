@@ -1,0 +1,51 @@
+#!/bin/bash
+set -e
+
+# Create the service user and application directory.
+useradd --system --user-group --shell /usr/sbin/nologin statement
+
+mkdir -p /opt/statement
+chown statement:statement /opt/statement
+chmod 750 /opt/statement
+
+# Install the tools required to download and extract the application.
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -y curl unzip
+
+# Download the release and save the executable under the application name.
+until curl -fL -o /opt/statement/release.zip \
+  "${archive_url}"; do
+  sleep 10
+done
+
+unzip -p /opt/statement/release.zip fake-service > /opt/statement/statement
+rm /opt/statement/release.zip
+
+chown statement:statement /opt/statement/statement
+chmod 755 /opt/statement/statement
+
+# Create the systemd service.
+cat > /etc/systemd/system/statement.service <<'SERVICE'
+[Unit]
+Description=Statement Service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=statement
+Group=statement
+WorkingDirectory=/opt/statement
+Environment="MESSAGE=Welcome to statement-service"
+Environment="NAME=statement"
+Environment="LISTEN_ADDR=0.0.0.0:9090"
+ExecStart=/opt/statement/statement
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+
+systemctl daemon-reload
+systemctl enable --now statement

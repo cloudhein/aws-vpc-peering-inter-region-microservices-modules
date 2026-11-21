@@ -1,0 +1,52 @@
+#!/bin/bash
+set -e
+
+# Create the service user and application directory.
+useradd --system --user-group --shell /usr/sbin/nologin account
+
+mkdir -p /opt/account
+chown account:account /opt/account
+chmod 750 /opt/account
+
+# Install the tools required to download and extract the application.
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -y curl unzip
+
+# Download the release and save the executable under the application name.
+until curl -fL -o /opt/account/release.zip \
+  "${archive_url}"; do
+  sleep 10
+done
+
+unzip -p /opt/account/release.zip fake-service > /opt/account/account
+rm /opt/account/release.zip
+
+chown account:account /opt/account/account
+chmod 755 /opt/account/account
+
+# Create the systemd service.
+cat > /etc/systemd/system/account.service <<'SERVICE'
+[Unit]
+Description=Account Service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=account
+Group=account
+WorkingDirectory=/opt/account
+Environment="MESSAGE=Welcome to account-service"
+Environment="NAME=account"
+Environment="LISTEN_ADDR=0.0.0.0:9090"
+Environment="UPSTREAM_URIS=${upstream_url}"
+ExecStart=/opt/account/account
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+
+systemctl daemon-reload
+systemctl enable --now account

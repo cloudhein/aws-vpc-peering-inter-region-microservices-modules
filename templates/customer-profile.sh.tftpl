@@ -1,0 +1,52 @@
+#!/bin/bash
+set -e
+
+# Create the service user and application directory.
+useradd --system --user-group --shell /usr/sbin/nologin customer-profile
+
+mkdir -p /opt/customer-profile
+chown customer-profile:customer-profile /opt/customer-profile
+chmod 750 /opt/customer-profile
+
+# Install the tools required to download and extract the application.
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install -y curl unzip
+
+# Download the release and save the executable under the application name.
+until curl -fL -o /opt/customer-profile/release.zip \
+  "${archive_url}"; do
+  sleep 10
+done
+
+unzip -p /opt/customer-profile/release.zip fake-service > /opt/customer-profile/customer-profile
+rm /opt/customer-profile/release.zip
+
+chown customer-profile:customer-profile /opt/customer-profile/customer-profile
+chmod 755 /opt/customer-profile/customer-profile
+
+# Create the systemd service.
+cat > /etc/systemd/system/customer-profile.service <<'SERVICE'
+[Unit]
+Description=Customer Profile Service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=customer-profile
+Group=customer-profile
+WorkingDirectory=/opt/customer-profile
+Environment="MESSAGE=Welcome to customer-profile-service"
+Environment="NAME=customer-profile"
+Environment="LISTEN_ADDR=0.0.0.0:9090"
+Environment="UPSTREAM_URIS=${upstream_url}"
+ExecStart=/opt/customer-profile/customer-profile
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+
+systemctl daemon-reload
+systemctl enable --now customer-profile
