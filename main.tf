@@ -495,3 +495,20 @@ module "statement_alb" {
     aws_route.statement_to_account_subnet_2,
   ]
 }
+
+################################################################################
+# private_dns
+################################################################################
+module "private_dns" {
+  source  = "terraform-aws-modules/route53/aws"
+  version = "6.5.1"
+
+  providers = {
+    aws = aws.singapore
+  }
+
+  name    = local.private_dns_zone_name
+  comment = var.private_dns_zone_comment
+  vpc     = local.private_dns_vpcs
+  records = local.private_dns_records
+}

@@ -899,3 +899,57 @@ locals {
     }
   }
 }
+
+################################################################################
+# private_dns
+################################################################################
+variable "private_dns_zone_name" {
+  description = "Private hosted zone name for service discovery"
+  type        = string
+  default     = "nandaxsr.xyz"
+  nullable    = false
+}
+
+variable "private_dns_zone_comment" {
+  description = "Comment for the private hosted zone"
+  type        = string
+  default     = "Private service discovery across the three service VPCs"
+}
+
+locals {
+  private_dns_zone_name = trimsuffix(var.private_dns_zone_name, ".")
+
+  private_dns_vpcs = {
+    customer_profile = {
+      vpc_id     = module.customer_profile_vpc.vpc_id
+      vpc_region = data.aws_region.singapore.region
+    }
+    account = {
+      vpc_id     = module.account_vpc.vpc_id
+      vpc_region = data.aws_region.malaysia.region
+    }
+    statement = {
+      vpc_id     = module.statement_vpc.vpc_id
+      vpc_region = data.aws_region.tokyo.region
+    }
+  }
+
+  private_dns_records = {
+    account = {
+      type = "A"
+      alias = {
+        name                   = module.account_alb.dns_name
+        zone_id                = module.account_alb.zone_id
+        evaluate_target_health = true
+      }
+    }
+    statement = {
+      type = "A"
+      alias = {
+        name                   = module.statement_alb.dns_name
+        zone_id                = module.statement_alb.zone_id
+        evaluate_target_health = true
+      }
+    }
+  }
+}

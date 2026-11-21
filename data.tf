@@ -22,6 +22,10 @@ data "aws_secretsmanager_secret_version" "statement_ssh_public_key" {
 #################################################################################
 # AWS Region references
 ################################################################################
+data "aws_region" "singapore" {
+  provider = aws.singapore
+}
+
 data "aws_region" "malaysia" {
   provider = aws.malaysia
 }
