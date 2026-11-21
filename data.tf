@@ -18,3 +18,14 @@ data "aws_secretsmanager_secret_version" "statement_ssh_public_key" {
 
   secret_id = var.ssh_public_key_secret_id
 }
+
+#################################################################################
+# AWS Region references
+################################################################################
+data "aws_region" "malaysia" {
+  provider = aws.malaysia
+}
+
+data "aws_region" "tokyo" {
+  provider = aws.tokyo
+}

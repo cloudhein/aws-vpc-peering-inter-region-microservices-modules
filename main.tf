@@ -262,6 +262,14 @@ module "customer_profile_ec2" {
   depends_on = [
     module.customer_profile_vpc,
     module.customer_profile_security_group,
+    aws_route.customer_to_account_subnet_1,
+    aws_route.customer_to_account_subnet_2,
+    aws_route.account_to_customer_subnet_1,
+    aws_route.account_to_customer_subnet_2,
+    aws_route.account_to_statement_subnet_1,
+    aws_route.account_to_statement_subnet_2,
+    aws_route.statement_to_account_subnet_1,
+    aws_route.statement_to_account_subnet_2,
   ]
 }
 
@@ -325,6 +333,14 @@ module "account_ec2" {
   depends_on = [
     module.account_vpc,
     module.account_security_group,
+    aws_route.customer_to_account_subnet_1,
+    aws_route.customer_to_account_subnet_2,
+    aws_route.account_to_customer_subnet_1,
+    aws_route.account_to_customer_subnet_2,
+    aws_route.account_to_statement_subnet_1,
+    aws_route.account_to_statement_subnet_2,
+    aws_route.statement_to_account_subnet_1,
+    aws_route.statement_to_account_subnet_2,
   ]
 }
 
@@ -358,6 +374,14 @@ module "statement_ec2" {
   depends_on = [
     module.statement_vpc,
     module.statement_security_group,
+    aws_route.customer_to_account_subnet_1,
+    aws_route.customer_to_account_subnet_2,
+    aws_route.account_to_customer_subnet_1,
+    aws_route.account_to_customer_subnet_2,
+    aws_route.account_to_statement_subnet_1,
+    aws_route.account_to_statement_subnet_2,
+    aws_route.statement_to_account_subnet_1,
+    aws_route.statement_to_account_subnet_2,
   ]
 }
 
@@ -385,6 +409,17 @@ module "customer_profile_alb" {
 
   listeners     = local.customer_profile_alb_listeners
   target_groups = local.customer_profile_alb_target_groups
+
+  depends_on = [
+    aws_route.customer_to_account_subnet_1,
+    aws_route.customer_to_account_subnet_2,
+    aws_route.account_to_customer_subnet_1,
+    aws_route.account_to_customer_subnet_2,
+    aws_route.account_to_statement_subnet_1,
+    aws_route.account_to_statement_subnet_2,
+    aws_route.statement_to_account_subnet_1,
+    aws_route.statement_to_account_subnet_2,
+  ]
 }
 
 ################################################################################
@@ -411,6 +446,17 @@ module "account_alb" {
 
   listeners     = local.account_alb_listeners
   target_groups = local.account_alb_target_groups
+
+  depends_on = [
+    aws_route.customer_to_account_subnet_1,
+    aws_route.customer_to_account_subnet_2,
+    aws_route.account_to_customer_subnet_1,
+    aws_route.account_to_customer_subnet_2,
+    aws_route.account_to_statement_subnet_1,
+    aws_route.account_to_statement_subnet_2,
+    aws_route.statement_to_account_subnet_1,
+    aws_route.statement_to_account_subnet_2,
+  ]
 }
 
 ################################################################################
@@ -437,4 +483,15 @@ module "statement_alb" {
 
   listeners     = local.statement_alb_listeners
   target_groups = local.statement_alb_target_groups
+
+  depends_on = [
+    aws_route.customer_to_account_subnet_1,
+    aws_route.customer_to_account_subnet_2,
+    aws_route.account_to_customer_subnet_1,
+    aws_route.account_to_customer_subnet_2,
+    aws_route.account_to_statement_subnet_1,
+    aws_route.account_to_statement_subnet_2,
+    aws_route.statement_to_account_subnet_1,
+    aws_route.statement_to_account_subnet_2,
+  ]
 }
